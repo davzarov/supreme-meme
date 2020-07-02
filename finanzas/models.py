@@ -25,6 +25,10 @@ class Presupuesto(models.Model):
     nombre = models.CharField('nombre', max_length=50)
     slug = models.SlugField(unique=True)
 
+    class Meta:
+        verbose_name = 'Presupuesto'
+        verbose_name_plural = 'Presupuestos'
+
     def __str__(self):
         return self.slug
 
@@ -40,6 +44,10 @@ class PresupuestoMensual(models.Model):
     presupuesto = models.ForeignKey(Presupuesto, on_delete=models.CASCADE)
     slug = models.SlugField(unique=True)
 
+    class Meta:
+        verbose_name = 'Presupuesto Mensual'
+        verbose_name_plural = 'Presupuestos Mensuales'
+
     def __str__(self):
         return self.slug
 
@@ -52,6 +60,10 @@ class Categoria(models.Model):
     nombre = models.CharField('nombre', max_length=50)
     prespuesto = models.ForeignKey(Presupuesto, on_delete=models.CASCADE)
     slug = models.SlugField(unique=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Categoría'
+        verbose_name_plural = 'Categorías'
 
     def __str__(self):
         return self.slug
@@ -66,7 +78,7 @@ class Transaccion(models.Model):
     beneficiario = models.CharField('beneficiario', max_length=50)
     categoria = models.ForeignKey(
         Categoria, on_delete=models.CASCADE, blank=True, null=True)
-    cuenta = models.ForeignKey(Cuenta, on_delete=True)
+    cuenta = models.ForeignKey(Cuenta, on_delete=models.CASCADE)
     debito = models.BooleanField('débito', default=True)
     fecha = models.DateField('fecha')
     monto = models.IntegerField('monto')
@@ -74,6 +86,10 @@ class Transaccion(models.Model):
         PresupuestoMensual, on_delete=models.CASCADE, blank=True, null=True)
     slug = models.SlugField(unique=True)
     transferencia = models.BooleanField('transferencia', default=False)
+
+    class Meta:
+        verbose_name = 'Transacción'
+        verbose_name_plural = 'Transacciones'
 
     def __str__(self):
         return self.slug

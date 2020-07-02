@@ -1,0 +1,11 @@
+/* .sidebar
+.sidebar-brand
+.sidebar-brand-icon {
+  display: none;
+}
+
+.sidebar.toggled
+.sidebar-brand
+.sidebar-brand-icon {
+  display: block;
+} */

@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    {% include 'styles.html' %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/sb-admin-2.min.css' %}"
+    >
+    {% block extra_styles %}{% endblock extra_styles %}
+    <title>Django Fin-Ops{% block title %}{% endblock title %}</title>
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        {% include 'sidebar.html' %}
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                {% include 'topbar.html' %}
+                <div class="container-fluid">
+                    {% block content %}
+                    {% endblock content %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'scripts.html' %}
+    <script
+        src="{% static 'js/sb-admin-2.min.js' %}"
+    ></script>
+    {% block extra_scripts %}{% endblock extra_scripts %}
+</body>
+</html>
