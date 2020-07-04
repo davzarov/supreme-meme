@@ -6,6 +6,10 @@
 <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/css/dataTables.bootstrap4.min.css"
     integrity="sha256-F+DaKAClQut87heMIC6oThARMuWne8+WzxIDT7jXuPA=" crossorigin="anonymous" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+    integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+    crossorigin="anonymous" />
 {% endblock extra_styles %}
 
 {% block content %}
@@ -24,10 +28,10 @@
 </nav>
 <!-- forms -->
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Formulario de Transferencia</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Transferencia</h6>
             </div>
             <div class="card-body">
                 <form action="{% url 'finanzas:cuentas' %}" method="POST">
@@ -65,7 +69,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Filtro del Gráfico</h6>
@@ -76,7 +80,7 @@
                     <input type="hidden" name="accion" value="filtro_fecha">
                     <div class="row">
                         {% for field in filtro_form %}
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-group">
                                 <label for="{{ field.auto_id }}">{{ field.label }}</label>
                                 {{ field }}
@@ -110,8 +114,14 @@
                         <tbody>
                             {% for cuenta in cuentas %}
                             <tr>
-                                <td>{{ cuenta.nombre }}</td>
-                                <td>{{ cuenta.balance|intcomma }}</td>
+                                <td>
+                                    <a href="{% url 'finanzas:transacciones' cuenta.slug %}">
+                                        {{ cuenta.nombre }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {{ cuenta.balance|intcomma }}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -127,7 +137,8 @@
                 <h6 class="m-0 font-weight-bold text-primary">Gasto por Presupuesto {{ cabecera_grafico }}</h6>
             </div>
             <div class="card-body">
-                <div class="chart-pie pt-4">
+                <!-- pt-4 -->
+                <div class="chart-pie">
                     <canvas id="gastoPresupuesto"></canvas>
                 </div>
             </div>
@@ -136,6 +147,11 @@
 </div>
 <script>
     $(document).ready(function () {
+        $('.datepicker').datepicker({
+            format: "dd/mm/yyyy",
+            language: "es"
+        });
+        // chart
         var ctx = document.getElementById('gastoPresupuesto');
         var gastoPresupuestoPie = new Chart(ctx, {
             type: "pie", // o doughnut
@@ -173,19 +189,18 @@
     });
 </script>
 {% endblock content %}
-<!--
-cuentas
-transferencia_form
-cabecera_grafico
-presupuesto_data
-categoria_data
-filtro_form
--->
+
 {% block extra_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/jquery.dataTables.min.js"
     integrity="sha256-t5ZQTZsbQi8NxszC10CseKjJ5QeMw5NINtOXQrESGSU=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/dataTables.bootstrap4.min.js"
     integrity="sha256-hJ44ymhBmRPJKIaKRf3DSX5uiFEZ9xB/qx8cNbJvIMU=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"
+    integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.es.min.js"
+    integrity="sha512-5pjEAV8mgR98bRTcqwZ3An0MYSOleV04mwwYj2yw+7PBhFVf/0KcE+NEox0XrFiU5+x5t5qidmo5MgBkDD9hEw=="
+    crossorigin="anonymous"></script>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js'
     integrity='sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw=' crossorigin='anonymous'></script>
 <script src="{% static 'js/init-datatables.js' %}"></script>

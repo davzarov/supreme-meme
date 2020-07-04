@@ -7,7 +7,7 @@ from django.utils.text import slugify
 class Cuenta(models.Model):
     balance = models.IntegerField('balance')
     nombre = models.CharField('nombre', max_length=50)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
 
     class Meta:
         verbose_name = 'Cuenta'
@@ -23,7 +23,7 @@ class Cuenta(models.Model):
 
 class Presupuesto(models.Model):
     nombre = models.CharField('nombre', max_length=50)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
 
     class Meta:
         verbose_name = 'Presupuesto'
@@ -42,7 +42,7 @@ class PresupuestoMensual(models.Model):
     mes = models.DateField('mes')
     planificado = models.IntegerField('planificado')
     presupuesto = models.ForeignKey(Presupuesto, on_delete=models.CASCADE)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
 
     class Meta:
         verbose_name = 'Presupuesto Mensual'
@@ -84,7 +84,7 @@ class Transaccion(models.Model):
     monto = models.IntegerField('monto')
     presupuesto = models.ForeignKey(
         PresupuestoMensual, on_delete=models.CASCADE, blank=True, null=True)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, blank=True)
     transferencia = models.BooleanField('transferencia', default=False)
 
     class Meta:

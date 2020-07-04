@@ -1,4 +1,5 @@
 import datetime
+# import locale
 
 from django.db.models import Sum
 from django.shortcuts import render
@@ -8,6 +9,8 @@ from .forms import (AgregarPresupuestoForm, AgregarTransaccionForm,
                     FechaRangoForm, MesForm, TransferenciaForm)
 from .models import (Categoria, Cuenta, Presupuesto, PresupuestoMensual,
                      Transaccion)
+
+# locale.setlocale(locale.LC_ALL, '')
 
 
 class ResumenCuentas(View):
@@ -280,15 +283,15 @@ class ResumenTransacciones(View):
         transaccion_form = AgregarTransaccionForm()
         filtro_form = FechaRangoForm()
         cuenta = Cuenta.objects.get(slug=kwargs['cuenta'])
-        hoy = datetime.datetime.today().strftime("%d-%m-%Y")
+        hoy = datetime.datetime.today().strftime("%Y-%m-%d")
 
         treinta_dias_atras = datetime.datetime.today() + datetime.timedelta(-30)
-        treinta_dias_atras = treinta_dias_atras.strftime("%d-%m-%Y")
+        treinta_dias_atras = treinta_dias_atras.strftime("%Y-%m-%d")
 
         fecha_inicio = kwargs['fecha_inicio']
         fecha_fin = kwargs['fecha_fin']
 
-        if all(fecha_inicio == 0 and fecha_fin == 0):
+        if fecha_inicio == 0 and fecha_fin == 0:
             transacciones = Transaccion.objects.filter(
                 cuenta=cuenta,
                 fecha__range=[treinta_dias_atras, hoy]).order_by('fecha', 'id')

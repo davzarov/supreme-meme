@@ -1,10 +1,211 @@
 {% extends 'base.html' %}
 
+{% load static humanize %}
+
 {% block extra_styles %}
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/css/dataTables.bootstrap4.min.css"
+    integrity="sha256-F+DaKAClQut87heMIC6oThARMuWne8+WzxIDT7jXuPA=" crossorigin="anonymous" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+    integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+    crossorigin="anonymous" />
 {% endblock extra_styles %}
 
 {% block content %}
+<!-- header -->
+<h1 class="h3 mb-2 text-gray-800 mb-4">
+    Transacciones de {{ cuenta.nombre }} 
+    {% if cuenta.balance > 0 %}
+        <span class="text-success">
+            Gs. {{ cuenta.balance|intcomma }}
+        </span>
+    {% else %}
+        <span class="text-danger">
+            Gs. {{ cuenta.balance|intcomma }}
+        </span>
+    {% endif %}
+</h1>
+<!-- breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">
+            Resumen de Transacciones
+        </li>
+    </ol>
+</nav>
+<!-- balances
+transacciones -->
+<!-- forms -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Nueva Transacción</h6>
+            </div>
+            <div class="card-body">
+                <form action="{% url 'finanzas:transacciones' cuenta.slug %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="agregar_transaccion">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="fecha">Fecha</label>
+                                {{ transaccion_form.fecha }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="beneficiario">Beneficiario</label>
+                                {{ transaccion_form.beneficiario }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="presupuesto">Presupuesto</label>
+                                <select class="custom-select" name="transaccion_form-presupuesto"
+                                    id="id_transaccion_form-presupuesto">
+                                    <option value="" selected>Elige un Presupuesto...</option>
+                                    {% for presupuesto in transaccion_form.fields.presupuesto.queryset %}
+                                    <option value="{{ presupuesto.id }}">{{ presupuesto.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="categoria">Categoria</label>
+                                <select class="custom-select" name="transaccion_form-categoria"
+                                    id="id_transaccion_form-categoria">
+                                    <option value="" selected>Elige una Categoria...</option>
+                                    {% for categoria in transaccion_form.fields.categoria.queryset %}
+                                    <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="monto">Monto</label>
+                                {{ transaccion_form.monto }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="direccion">Dirección</label>
+                            {% for direccion in transaccion_form.direccion %}
+                            <div class="custom-control custom-radio">
+                                {{ direccion }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <hr>
+                    <input class="btn btn-success" type="submit" value="Agregar Transacción">
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Filtrar Transacciones</h6>
+            </div>
+            <div class="card-body">
+                <form action="{% url 'finanzas:transacciones' cuenta.slug %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="filtrar_fecha">
+                    <div class="row">
+                        {% for field in filtro_form %}
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="{{ field.auto_id }}">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <input class="btn btn-success" type="submit" value="Filtrar Transcciones">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary"></h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="dataTable" class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Beneficiario</th>
+                        <th>Monto</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaccion in transacciones %}
+                    <tr>
+                        <td>{{ transaccion.fecha }}</td>
+                        <td>
+                            {% if transaccion.de_cuenta %}
+                                TRANSFERENCIA de {{ transaccion.de_cuenta }}
+                            {% elif transaccion.a_cuenta %}
+                                TRANSFERENCIA de {{ transaccion.a_cuenta }}
+                            {% else %}
+                                {{ transaccion.beneficiario }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if transaccion.debito == False or transaccion.de_cuenta %}
+                                +
+                            {% endif %}
+                            {{ transaccion.monto|intcomma }}
+                        </td>
+                        <td>
+                            {% for k, v in balances.items %}
+                                {% if k == transaccion.id %}
+                                    {{ v }}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $('.datepicker').datepicker({
+            format: "dd/mm/yyyy",
+            language: "es"
+        });
+        $(function () {
+            $('#id_transaccion_form-categoria').chained("#id_transaccion_form-presupuesto");
+        });
+    });
+</script>
 {% endblock content %}
 
 {% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/jquery.dataTables.min.js"
+    integrity="sha256-t5ZQTZsbQi8NxszC10CseKjJ5QeMw5NINtOXQrESGSU=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/dataTables.bootstrap4.min.js"
+    integrity="sha256-hJ44ymhBmRPJKIaKRf3DSX5uiFEZ9xB/qx8cNbJvIMU=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"
+    integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.es.min.js"
+    integrity="sha512-5pjEAV8mgR98bRTcqwZ3An0MYSOleV04mwwYj2yw+7PBhFVf/0KcE+NEox0XrFiU5+x5t5qidmo5MgBkDD9hEw=="
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-chained/1.0.1/jquery.chained.min.js"
+    integrity="sha512-rcWQG55udn0NOSHKgu3DO5jb34nLcwC+iL1Qq6sq04Sj7uW27vmYENyvWm8I9oqtLoAE01KzcUO6THujRpi/Kg=="
+    crossorigin="anonymous"></script>
+<script src="{% static 'js/init-datatables.js' %}"></script>
 {% endblock extra_scripts %}

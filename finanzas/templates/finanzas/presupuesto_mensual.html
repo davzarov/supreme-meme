@@ -1,10 +1,220 @@
 {% extends 'base.html' %}
 
+{% load static humanize mathfilters %}
+
 {% block extra_styles %}
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/css/dataTables.bootstrap4.min.css"
+    integrity="sha256-F+DaKAClQut87heMIC6oThARMuWne8+WzxIDT7jXuPA=" crossorigin="anonymous" />
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+    integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+    crossorigin="anonymous" />
 {% endblock extra_styles %}
 
 {% block content %}
+<!-- header -->
+<h1 class="h3 mb-2 text-gray-800 mb-4">
+    Presupuesto {{ encabezado }}
+</h1>
+<!-- breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+        <li class="breadcrumb-item active" aria-current="page">
+            Presupuesto Mensual
+        </li>
+    </ol>
+</nav>
+<!-- cards -->
+<div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Efectivo Entrante</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">Gs.
+                            {{ efectivo_entrante.monto__sum|intcomma }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Efectivo Saliente</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">Gs.
+                            {{ efectivo_saliente.monto__sum|intcomma }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-success py-2 text-white shadow">
+            <div class="card-body">
+                Efectivo Entrante
+                <div class="text-white-50 small">{{ efectivo_entrante.monto__sum|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card bg-danger py-2 text-white shadow">
+            <div class="card-body">
+                Efectivo Saliente
+                <div class="text-white-50 small">{{ efectivo_saliente.monto__sum|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- forms -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Nuevo Presupuesto</h6>
+            </div>
+            <div class="card-body">
+                <form action="{% url 'finanzas:presupuestos' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="agregar_presupuesto">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="presupuesto">Presupuesto</label>
+                                {{ presupuesto_form.presupuesto }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="monto">Monto</label>
+                                {{ presupuesto_form.monto }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="mes_inicio">Mes de Inicio</label>
+                                {{ presupuesto_form.mes_inicio }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="duracion">Duración</label>
+                            {% for duracion in presupuesto_form.duracion %}
+                            <div class="custom-control custom-radio">
+                                {{ duracion }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <hr>
+                    <input class="btn btn-success" type="submit" value="Agregar Presupuesto">
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Cambiar Mes de Presupuesto</h6>
+            </div>
+            <div class="card-body">
+                <form action="{% url 'finanzas:presupuestos' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="filtro_fecha">
+                    <div class="row">
+                        {% for field in filtro_form %}
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="{{ field.auto_id }}">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <input class="btn btn-success" type="submit" value="Cambiar Mes">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- tables -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Presupuestos Mensuales</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="dataTable" class="table table-bordered" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Presupuesto</th>
+                        <th>Planificado</th>
+                        <th>Actual</th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>TOTAL</th>
+                        <th>{{ total_planificado.planificado__sum|intcomma }}</th>
+                        <th>{{ total_actual.actual__sum|intcomma }}</th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    {% for presupuesto in presupuestos_mensuales %}
+                    <tr>
+                        <td>{{ presupuesto.presupuesto.nombre }}</td>
+                        <td>{{ presupuesto.planificado }}</td>
+                        {% with diezporciento=presupuesto.planificado|mul:0.1 %}
+                        <td>
+                            {% if presupuesto.actual < presupuesto.planificado|sub:diezporciento %}
+                            <span class="text-success">{{ presupuesto.actual|intcomma }}</span>
+                            {% elif presupuesto.actual > presupuesto.planificado|sub:diezporciento and presupuesto.actual <= presupuesto.planificado %}
+                            <span class="text-warning">{{ presupuesto.actual|intcomma }}</span>
+                            {% else %}
+                            <span class="text-danger">{{ presupuesto.actual|intcomma }}</span>
+                            {% endif %}
+                        </td>
+                        {% endwith %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $('.datepicker').datepicker({
+            format: "dd/mm/yyyy",
+            language: "es"
+        });
+    });
+</script>
 {% endblock content %}
 
 {% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/jquery.dataTables.min.js"
+    integrity="sha256-t5ZQTZsbQi8NxszC10CseKjJ5QeMw5NINtOXQrESGSU=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/dataTables.bootstrap4.min.js"
+    integrity="sha256-hJ44ymhBmRPJKIaKRf3DSX5uiFEZ9xB/qx8cNbJvIMU=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"
+    integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.es.min.js"
+    integrity="sha512-5pjEAV8mgR98bRTcqwZ3An0MYSOleV04mwwYj2yw+7PBhFVf/0KcE+NEox0XrFiU5+x5t5qidmo5MgBkDD9hEw=="
+    crossorigin="anonymous"></script>
+<script src="{% static 'js/init-datatables.js' %}"></script>
 {% endblock extra_scripts %}
